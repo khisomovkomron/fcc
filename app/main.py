@@ -1,16 +1,38 @@
-from fastapi import FastAPI, Body, Response, status, HTTPException
+from fastapi import FastAPI, Body, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+
+
+while True:
+
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
+                                password='1994', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("Database connection was succesfull!")
+        break
+    except Exception as error:
+        print("Connecting to database failed")
+        print("Error: ", error)
 
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True
     rating: Optional[int] = None 
+
+
 
 my_posts = [{'title': 'title of post 1', "content": 'content of post 1', 'id': 1},
              {'title': 'title of post 2', 'content': 'content of post 2', 'id': 2}]
@@ -30,6 +52,12 @@ def find_index_post(id):
 @app.get('/')
 async def root():
     return {'message': "hello world"}
+
+
+@app.get('/sqlalchemy')
+def test_posts(db: Session = Depends(get_db)):
+    return {'status': 'Success'}
+
 
 @app.get('/posts')
 async def get_posts():
@@ -60,8 +88,24 @@ def delete_post(id: int):
     # my_posts.pop(idnex)
 
     index = find_index_post(id)
+    if index == None: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                            detail=f'post with id: {id} does not exist')
     my_posts.pop(index)
 
-    return {'message': 'post was successfully deleted'}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put('/posts/{id}')
+def update_post(id: int, post: Post):
+
+    index = find_index_post(id)
+    if index == None: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                            detail=f'post with id: {id} does not exist')
+    
+    post_dict = post.dict()
+    post_dict['id'] = id 
+    my_posts[index] = post_dict
+    return {'data': post_dict}
 
 last_episode = '2:05:48'
