@@ -98,16 +98,18 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put('/posts/{id}')
-def update_post(id: int, post: Post):
+def update_post(id: int, updated_post: Post, db: Session = Depends(get_db)):
 
-    index = find_index_post(id)
-    if index == None: 
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+
+    if post == None: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                             detail=f'post with id: {id} does not exist')
     
-    post_dict = post.dict()
-    post_dict['id'] = id 
-    my_posts[index] = post_dict
-    return {'data': post_dict}
+    post_query.update(updated_post.dict(), synchronize_session=False)
+    db.commit()
+    
+    return {'data': post_query.first()}
 
 last_episode = '2:05:48'
