@@ -79,21 +79,22 @@ async def create_post(post: Post, db: Session = Depends(get_db)):
 @app.get('/posts/{id}')
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id==id).first()
+    if post == None: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                            detail=f'post with id: {id} does not exist')
 
     return {'post_detail': post}
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    # deleting post
-    # find index of a post in an array
-    # my_posts.pop(idnex)
-
-    index = find_index_post(id)
-    if index == None: 
+def delete_post(id: int, db: Session = Depends(get_db)):
+    
+    post_query = db.query(models.Post).filter(models.Post.id==id)
+    
+    if post_query.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                             detail=f'post with id: {id} does not exist')
-    my_posts.pop(index)
-
+    post_query.delete(synchronize_session=False)
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put('/posts/{id}')
