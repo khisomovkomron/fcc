@@ -30,7 +30,6 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None 
 
 
 
@@ -56,29 +55,31 @@ async def root():
 
 @app.get('/sqlalchemy')
 def test_posts(db: Session = Depends(get_db)):
-    return {'status': 'Success'}
+    posts = db.query(models.Post).all()
+    print(posts)
+    return {'data': posts}
 
 
 @app.get('/posts')
-async def get_posts():
-    return {'data': my_posts}
+async def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+
+    return {'data': posts}
 
 @app.post('/posts', status_code=status.HTTP_201_CREATED)
-async def create_post(post: Post):
-    post_dict = post.dict()
-    post_dict['id'] = randrange(0, 10000)
+async def create_post(post: Post, db: Session = Depends(get_db)):
+    post.dict()
+    new_post = models.Post(**post.dict())
 
-    my_posts.append(post_dict)
-    return {'data': post_dict}
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return {'data': new_post}
 
 @app.get('/posts/{id}')
-def get_post(id: int, response: Response):
-    print(id)
-    # return {'id': my_posts[id]}
-    post = find_post(id)
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'post with id: {id} was not found')
+def get_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id==id).first()
+
     return {'post_detail': post}
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
