@@ -6,7 +6,7 @@ from typing import List
 
 router = APIRouter(
     prefix='/posts',
-    tags=['posts']
+    tags=['Posts']
 )
 
 
@@ -61,3 +61,4 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
     db.commit()
     
     return post_query.first()
+
