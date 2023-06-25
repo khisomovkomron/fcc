@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+    api:
+      build: .
+      ports: 
+        - 8000:8000
+      # env_file:
+      #   - ./
+      environment:
+        - DATABASE_HOSTNAME=localhost
+        - DATABASE_PORT=5432
+        - DATABASE_PASSWORD=1994
+        - DATABASE_NAME=fastapi
+        - DATABASE_USERNAME=postgres
+        - SECRET_KEY=wadwadiwa897d90a8wyd0wa8fhd89eqayudfwa
+        - ALGORITHM=HS256
+        - ACCESS_TOKEN_EXPIRE_MINUTES=30
+
