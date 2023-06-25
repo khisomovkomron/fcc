@@ -13,12 +13,16 @@ origins = ['*']
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin=origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=['*'] 
 
 )
+
+@app.get('/')
+def main_page():
+    return {'message': "This is Fastapi Course"}
         
 app.include_router(post.router)
 app.include_router(user.router)
