@@ -9,15 +9,17 @@ def test_root(client):
     assert res.json()['message'] == "This is Fastapi Course", "Incorrect message text"
     assert res.status_code == 200, "Incorrect status code"
 
-
-
 def test_create_user(client):
-    res = client.post('/users', json={"email": "komron@gmail.com", 
+    res = client.post('/users/', json={"email": "komron@gmail.com", 
                                       "password": "pass123"})
     new_user = schemas.UserOut(**res.json())
     assert new_user.email == "komron@gmail.com"
     assert res.status_code == 201
-    
+
+def test_login_user(client):
+    res = client.post('/login', data={"username": "komron@gmail.com", 
+                                      "password": "pass123"})
+    assert res.status_code == 200
 
 # pytest flags
 
