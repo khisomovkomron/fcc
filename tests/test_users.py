@@ -1,13 +1,20 @@
 from app import schemas
 from .database import session, client
+import pytest 
+from jose import jwt
+from app.config import settings
 
 
-def test_root(client):
+@pytest.fixture
+def test_user(client):
+    user_data = {'email': "komron@gmail.com", 
+                 "password": "pass123"}
+    res = client.post('/users', json=user_data)
 
-    res = client.get('/')
-    print(res.json().get('message')) 
-    assert res.json()['message'] == "This is Fastapi Course", "Incorrect message text"
-    assert res.status_code == 200, "Incorrect status code"
+    assert res.status_code == 201
+    new_user = res.json()
+    new_user['password'] = user_data['password']
+    yield new_user
 
 def test_create_user(client):
     res = client.post('/users/', json={"email": "komron@gmail.com", 
@@ -16,9 +23,14 @@ def test_create_user(client):
     assert new_user.email == "komron@gmail.com"
     assert res.status_code == 201
 
-def test_login_user(client):
-    res = client.post('/login', data={"username": "komron@gmail.com", 
-                                      "password": "pass123"})
+def test_login_user(client, test_user):
+    res = client.post('/login', data={"username": test_user['email'], 
+                                      "password": test_user['password']})
+    login_res = schemas.Token(**res.json())
+    payload = jwt.decode(login_res.token, settings.secret_key, algorithms=[settings.algorithm])
+    id: str = payload.get('user_id')
+    assert id == test_user['id']
+    assert login_res.token_type == 'bearer'
     assert res.status_code == 200
 
 # pytest flags
