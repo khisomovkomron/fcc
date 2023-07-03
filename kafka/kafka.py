@@ -39,3 +39,5 @@ conf = {'bootstrap.servers': 'host1:9092, host2:9092',
        'enabl.auto.commit': False}
 
 consumer = Consumer(conf)
+
+
